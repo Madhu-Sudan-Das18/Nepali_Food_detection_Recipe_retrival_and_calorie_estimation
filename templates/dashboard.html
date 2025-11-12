@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Recognition & Recipe System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .user-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+        }
+
+        .user-info span {
+            color: white;
+            font-weight: 500;
+            font-size: 1em;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid white;
+            padding: 5px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.3s ease;
+            width: auto;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-1px);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .user-info {
+                position: static;
+                align-items: center;
+                margin-bottom: 15px;
+            }
+        }
+
+        .upload-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px dashed #dee2e6;
+        }
+
+        .upload-area {
+            text-align: center;
+            padding: 40px 20px;
+            border: 2px dashed #adb5bd;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f1f3ff;
+        }
+
+        .upload-area i {
+            font-size: 3em;
+            color: #adb5bd;
+            margin-bottom: 15px;
+        }
+
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #e3f2fd;
+        }
+
+        #imagePreview {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        input, select, button {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            background: #adb5bd;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .info-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            margin-top: 15px;
+        }
+
+        .info-btn:hover {
+            background: linear-gradient(135deg, #218838 0%, #1e9e8a 100%);
+        }
+
+        .results-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+        }
+
+        .result-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .result-card.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .prediction-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .prediction-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+            object-fit: cover;
+        }
+
+        .prediction-text {
+            flex: 1;
+        }
+
+        .prediction-text h3 {
+            color: #495057;
+            margin-bottom: 5px;
+        }
+
+        .confidence {
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .category-btn {
+            background: white;
+            border: 2px solid #e9ecef;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .category-btn:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .category-btn.selected {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        .ingredients-list {
+            list-style: none;
+            margin: 20px 0;
+        }
+
+        .ingredient-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: #f8f9fa;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .ingredient-name {
+            font-weight: 500;
+        }
+
+        .ingredient-details {
+            text-align: right;
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        .calories-badge {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            display: inline-block;
+            margin: 10px 0;
+        }
+
+        .recipe-steps {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            white-space: pre-line;
+            line-height: 1.6;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            display: none;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .history-section {
+            margin-top: 30px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+
+        .history-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #c33;
+            margin: 10px 0;
+            display: none;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+            margin: 10px 0;
+            display: none;
+        }
+
+        .warning-message {
+            background: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #ffc107;
+            margin: 10px 0;
+            display: none;
+        }
+
+        .retry-btn {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            margin-top: 10px;
+        }
+
+        .retry-btn:hover {
+            background: linear-gradient(135deg, #e55a5a 0%, #d4491a 100%);
+        }
+
+        /* Remove debug info styles */
+        .debug-info {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="user-info">
+                <span>Welcome, <strong id="usernameDisplay">demo</strong>!</span>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+            <h1>🍽️ Food Recognition & Recipe System</h1>
+            <p>Upload a food image to get ingredients, calories, and recipes</p>
+        </div>
+
+        <div class="main-content">
+            
+            <div class="upload-section">
+                <div class="upload-area" id="uploadArea">
+                    <i>📷</i>
+                    <h3>Click to upload or drag & drop</h3>
+                    <p>Supported formats: JPG, PNG, JPEG</p>
+                    <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+                    <img id="imagePreview" alt="Preview">
+                </div>
+
+                <div class="form-group">
+                    <label for="servings">Number of Servings:</label>
+                    <input type="number" id="servings" min="1" max="20" value="1">
+                </div>
+
+                <button id="analyzeBtn" disabled>Analyze Food Image</button>
+                <button class="info-btn" onclick="openHealthInfo()">📚 Learn About Healthy Eating</button>
+                
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p id="loadingText">Analyzing your food image...</p>
+                </div>
+
+                <div class="error-message" id="errorMessage"></div>
+                <div class="success-message" id="successMessage"></div>
+                <div class="warning-message" id="warningMessage"></div>
+                
+            </div>
+
+            
+            <div class="results-section">
+                
+                <div class="result-card" id="predictionResult">
+                    <div class="prediction-header">
+                        <img id="resultImage" class="prediction-image" alt="Uploaded food">
+                        <div class="prediction-text">
+                            <h3 id="predictedFood">Food Name</h3>
+                            <div class="confidence" id="confidence">Confidence: 95%</div>
+                        </div>
+                    </div>
+                    
+                    <div id="categorySelection">
+                        <h4>Select Food Type:</h4>
+                        <div class="categories-grid" id="categoriesGrid">
+                           
+                        </div>
+                    </div>
+
+                    <button id="getRecipeBtn" style="display: none;">Get Recipe & Ingredients</button>
+                    <button id="retryRecipeBtn" class="retry-btn" style="display: none;">Try Different Category</button>
+                </div>
+
+                
+                <div class="result-card" id="recipeResult">
+                    <h3 id="recipeTitle">Recipe Details</h3>
+                    
+                    <div class="calories-badge" id="caloriesBadge">
+                        Total Calories: <span id="totalCalories">0</span>
+                    </div>
+
+                    <h4>Ingredients (for <span id="servingsCount">1</span> serving):</h4>
+                    <ul class="ingredients-list" id="ingredientsList">
+                        
+                    </ul>
+
+                    <h4>Recipe Instructions:</h4>
+                    <div class="recipe-steps" id="recipeSteps">
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="history-section">
+            <h3>Recent Analysis History</h3>
+            <div id="historyList">
+                
+            </div>
+        </div>
+    </div>
+
+    <script>
+        
+        const uploadArea = document.getElementById('uploadArea');
+        const imageUpload = document.getElementById('imageUpload');
+        const imagePreview = document.getElementById('imagePreview');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const servingsInput = document.getElementById('servings');
+        const loading = document.getElementById('loading');
+        const loadingText = document.getElementById('loadingText');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+        const warningMessage = document.getElementById('warningMessage');
+        const usernameDisplay = document.getElementById('usernameDisplay');
+
+       
+        const predictionResult = document.getElementById('predictionResult');
+        const recipeResult = document.getElementById('recipeResult');
+        const resultImage = document.getElementById('resultImage');
+        const predictedFood = document.getElementById('predictedFood');
+        const confidence = document.getElementById('confidence');
+        const categoriesGrid = document.getElementById('categoriesGrid');
+        const categorySelection = document.getElementById('categorySelection');
+        const getRecipeBtn = document.getElementById('getRecipeBtn');
+        const retryRecipeBtn = document.getElementById('retryRecipeBtn');
+
+        
+        const recipeTitle = document.getElementById('recipeTitle');
+        const totalCalories = document.getElementById('totalCalories');
+        const servingsCount = document.getElementById('servingsCount');
+        const ingredientsList = document.getElementById('ingredientsList');
+        const recipeSteps = document.getElementById('recipeSteps');
+        const caloriesBadge = document.getElementById('caloriesBadge');
+        const historyList = document.getElementById('historyList');
+
+        
+        let currentPrediction = null;
+        let selectedCategory = null;
+        let currentFilename = null;
+        let availableCategories = null;
+
+        
+        uploadArea.addEventListener('click', () => imageUpload.click());
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleImageUpload(files[0]);
+            }
+        });
+
+        imageUpload.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleImageUpload(e.target.files[0]);
+            }
+        });
+
+        analyzeBtn.addEventListener('click', analyzeFood);
+        getRecipeBtn.addEventListener('click', getRecipe);
+        retryRecipeBtn.addEventListener('click', showCategorySelection);
+
+        
+        function handleImageUpload(file) {
+            if (!file.type.startsWith('image/')) {
+                showError('Please upload an image file (JPG, PNG, JPEG)');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imagePreview.src = e.target.result;
+                imagePreview.style.display = 'block';
+                resultImage.src = e.target.result;
+                analyzeBtn.disabled = false;
+                currentFilename = file.name;
+                
+                
+                resetResults();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function resetResults() {
+            predictionResult.classList.remove('active');
+            recipeResult.classList.remove('active');
+            categoriesGrid.innerHTML = '';
+            categorySelection.style.display = 'none';
+            getRecipeBtn.style.display = 'none';
+            retryRecipeBtn.style.display = 'none';
+            hideAllMessages();
+        }
+
+        async function analyzeFood() {
+            const file = imageUpload.files[0];
+            if (!file) {
+                showError('Please select an image first');
+                return;
+            }
+
+            loading.style.display = 'block';
+            loadingText.textContent = 'Analyzing your food image...';
+            analyzeBtn.disabled = true;
+            hideAllMessages();
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                
+                if (response.status === 401) {
+                    window.location.href = '/login';
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Prediction failed');
+                }
+
+                currentPrediction = data;
+                displayPredictionResult(data);
+                
+            } catch (error) {
+                showError('Analysis failed: ' + error.message);
+                console.error('Error:', error);
+            } finally {
+                loading.style.display = 'none';
+                analyzeBtn.disabled = false;
+            }
+        }
+
+        function displayPredictionResult(data) {
+            predictedFood.textContent = data.predicted_food;
+            confidence.textContent = `Confidence: ${data.confidence}%`;
+            
+            predictionResult.classList.add('active');
+            recipeResult.classList.remove('active');
+
+            
+            if (data.needs_category_selection && data.categories) {
+                availableCategories = data.categories;
+                displayCategories(data.categories);
+                categorySelection.style.display = 'block';
+                getRecipeBtn.style.display = 'block';
+                retryRecipeBtn.style.display = 'none';
+                showSuccess(`Food identified as "${data.predicted_food}". Please select a category and click "Get Recipe & Ingredients".`);
+            } else {
+                
+                categorySelection.style.display = 'none';
+                getRecipeBtn.style.display = 'none';
+                retryRecipeBtn.style.display = 'none';
+                showSuccess(`Food identified as "${data.predicted_food}". Getting recipe...`);
+                getRecipe(); 
+            }
+        }
+
+        function displayCategories(categories) {
+            categoriesGrid.innerHTML = '';
+            selectedCategory = null;
+
+            Object.entries(categories).forEach(([key, category]) => {
+                const button = document.createElement('div');
+                button.className = 'category-btn';
+                button.textContent = category.display_name;
+                button.dataset.key = key;
+                button.addEventListener('click', () => {
+                   
+                    document.querySelectorAll('.category-btn').forEach(btn => {
+                        btn.classList.remove('selected');
+                    });
+                    
+                    button.classList.add('selected');
+                    selectedCategory = key;
+                });
+                categoriesGrid.appendChild(button);
+            });
+
+            
+            if (Object.keys(categories).length > 0) {
+                const firstButton = categoriesGrid.querySelector('.category-btn');
+                if (firstButton) {
+                    firstButton.classList.add('selected');
+                    selectedCategory = Object.keys(categories)[0];
+                }
+            }
+        }
+
+        function showCategorySelection() {
+            recipeResult.classList.remove('active');
+            categorySelection.style.display = 'block';
+            getRecipeBtn.style.display = 'block';
+            retryRecipeBtn.style.display = 'none';
+            hideError();
+            showWarning('Please select a different category and try again.');
+        }
+
+        async function getRecipe() {
+            if (!currentPrediction) return;
+
+            const servings = parseInt(servingsInput.value) || 1;
+            loading.style.display = 'block';
+            loadingText.textContent = 'Getting recipe and ingredients...';
+            hideAllMessages();
+
+            try {
+                const requestData = {
+                    food_name: currentPrediction.predicted_food,
+                    servings: servings,
+                    filename: currentFilename
+                };
+
+                
+                if (currentPrediction.needs_category_selection && selectedCategory) {
+                    requestData.category_key = selectedCategory;
+                }
+
+                const response = await fetch('/get_recipe', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                
+                if (response.status === 401) {
+                    window.location.href = '/login';
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    
+                    if (response.status === 404) {
+                        if (currentPrediction.needs_category_selection && availableCategories) {
+                            throw new Error('Recipe data not found for this category. Please try a different category.');
+                        } else {
+                            throw new Error('Recipe data not found for this food item.');
+                        }
+                    } else {
+                        throw new Error(data.error || 'Failed to get recipe');
+                    }
+                }
+
+                displayRecipeResult(data, servings);
+                loadHistory(); 
+                
+            } catch (error) {
+                showError('Failed to get recipe: ' + error.message);
+                console.error('Error:', error);
+                
+               
+                if (currentPrediction.needs_category_selection && availableCategories) {
+                    retryRecipeBtn.style.display = 'block';
+                }
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        function displayRecipeResult(data, servings) {
+            recipeTitle.textContent = data.display_name;
+            totalCalories.textContent = data.calories;
+            servingsCount.textContent = servings;
+            
+            // Display ingredients
+            ingredientsList.innerHTML = '';
+            if (data.ingredients && data.ingredients.length > 0) {
+                data.ingredients.forEach(ingredient => {
+                    const li = document.createElement('li');
+                    li.className = 'ingredient-item';
+                    li.innerHTML = `
+                        <span class="ingredient-name">${ingredient.name}</span>
+                        <div class="ingredient-details">
+                            ${ingredient.grams}g • ${ingredient.kcal} kcal
+                        </div>
+                    `;
+                    ingredientsList.appendChild(li);
+                });
+            } else {
+                ingredientsList.innerHTML = '<li class="ingredient-item">No ingredients data available</li>';
+            }
+
+            
+            recipeSteps.textContent = data.recipe || 'Recipe instructions not available';
+
+            
+            recipeResult.classList.add('active');
+            categorySelection.style.display = 'none';
+            getRecipeBtn.style.display = 'none';
+            retryRecipeBtn.style.display = 'none';
+            caloriesBadge.style.display = 'block';
+            
+            showSuccess(`Recipe loaded successfully for ${data.display_name}!`);
+        }
+
+        async function loadHistory() {
+            try {
+                const response = await fetch('/history');
+
+                
+                if (response.status === 401) {
+                    window.location.href = '/login';
+                    return;
+                }
+
+                const history = await response.json();
+
+                historyList.innerHTML = '';
+
+                if (history.length === 0) {
+                    historyList.innerHTML = '<p>No analysis history yet.</p>';
+                    return;
+                }
+
+                history.forEach(item => {
+                    const historyItem = document.createElement('div');
+                    historyItem.className = 'history-item';
+                    historyItem.innerHTML = `
+                        <strong>${item.predicted_food}</strong>
+                        <div style="color: #666; font-size: 0.9em;">
+                            ${new Date(item.datetime).toLocaleString()} • 
+                            ${item.calories} kcal • 
+                            ${item.confidence ? `Confidence: ${item.confidence}%` : ''}
+                        </div>
+                    `;
+                    historyList.appendChild(historyItem);
+                });
+
+            } catch (error) {
+                console.error('Error loading history:', error);
+            }
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            hideSuccess();
+            hideWarning();
+        }
+
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+            hideError();
+            hideWarning();
+        }
+
+        function showWarning(message) {
+            warningMessage.textContent = message;
+            warningMessage.style.display = 'block';
+            hideError();
+            hideSuccess();
+        }
+
+        function hideError() {
+            errorMessage.style.display = 'none';
+        }
+
+        function hideSuccess() {
+            successMessage.style.display = 'none';
+        }
+
+        function hideWarning() {
+            warningMessage.style.display = 'none';
+        }
+
+        function hideAllMessages() {
+            hideError();
+            hideSuccess();
+            hideWarning();
+        }
+
+        function logout() {
+            window.location.href = '/logout';
+        }
+
+        function openHealthInfo() {
+            window.open('/health-info', '_blank');
+        }
+
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            const username = 'demo' || 'User';
+            usernameDisplay.textContent = username;
+            
+            loadHistory();
+        });
+    </script>
+</body>
+</html>
