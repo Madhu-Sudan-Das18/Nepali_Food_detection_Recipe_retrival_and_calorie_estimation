@@ -57,7 +57,20 @@ Install required packages:
 ```bash
 pip install flask torch torchvision timm pillow werkzeug
 
-
+###File Structure 
+project/
+├── app.py                    # Main application
+├── best_food_model.pth      # Trained model weights
+├── recipes.json             # Recipe database
+├── food_history.db          # SQLite database (auto-created)
+├── templates/               # HTML templates
+│   ├── login.html
+│   ├── register.html
+│   ├── dashboard.html
+│   └── health_info.html
+├── static/
+│   └── uploads/            # Uploaded images
+└── README.txt              # This file
 
 ### ML-Training-Script README 
 
